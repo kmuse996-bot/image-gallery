@@ -1,5 +1,14 @@
 [
   {
+    "id": "term-sheet",
+    "title": "텀 캐릭터 시트",
+    "image": "images/term_sheet.jpg",
+    "ratio": "16/9",
+    "date": "2026-10-29",
+    "en": "Photorealistic character reference sheet, single image.\n[Camera] horizontal 16:9; light grey studio background divided into panels: left two tall panels show full-body front view and full-body back view standing straight; top right three panels show head-and-shoulders side profile, three-quarter view and front view; bottom right wide panel shows a flat-lay of personal items.\n[Face] 20-year-old Korean man, soft idol look; vivid red textured short hair with messy bangs; gentle slightly droopy eyes; small straight nose; plump rosy lips; very fair porcelain skin, clean-shaven, no stubble, no facial piercings; identical face in every panel.\n[Pose] standing straight and relaxed, arms down by his sides, front and back views matching.\n[Outfit] oversized black hoodie with silver rhinestone graphic, black shorts, white ankle socks, clean white low-top sneakers, silver ring, small silver earrings.\n[Body] very long slim body, 8.5-head model proportions, long legs, wide straight shoulders, slim waist, large masculine hands with long fingers, no body hair.\n[Light] soft even studio light.\n[Background] plain light grey studio; flat-lay items: black wireless headphones, silver chain ring, glossy red heart-shaped lollipop, black smartphone, folded red knit sweater.\nNo text, no labels, no logos, no watermark.",
+    "ko": "Photorealistic character reference sheet, 한 장의 이미지.\n[카메라] 가로 16:9. 밝은 회색 스튜디오 배경을 칸으로 나눈다. 왼쪽 세로로 긴 두 칸에는 똑바로 선 전신 앞모습과 뒷모습, 오른쪽 위 세 칸에는 어깨까지 나온 옆모습, 반측면, 정면 얼굴, 오른쪽 아래 넓은 칸에는 개인 소품 플랫레이를 놓는다.\n[얼굴] 20세 한국 남성, 부드러운 아이돌형. 결이 살아 있는 선명한 빨간 숏컷에 흐트러진 앞머리. 순하고 살짝 처진 눈, 작고 곧은 코, 도톰한 장밋빛 입술. 아주 하얀 도자기 피부, 깔끔하게 면도해 수염 자국 없음, 얼굴 피어싱 없음. 모든 칸에서 같은 얼굴.\n[포즈] 팔을 옆으로 편하게 내리고 똑바로 선 자세, 앞모습과 뒷모습이 일치한다.\n[의상] 은색 라인스톤 그래픽이 있는 오버사이즈 검정 후드티, 검정 반바지, 흰 단목양말, 깨끗한 흰 로우탑 스니커즈, 은반지, 작은 은귀걸이.\n[바디] 아주 길고 슬림한 몸, 8.5등신 모델 비율, 긴 다리, 반듯하고 넓은 어깨, 가는 허리, 손가락이 긴 크고 남성적인 손, 체모 없음.\n[조명] 부드럽고 고른 스튜디오 조명.\n[배경] 무지 밝은 회색 스튜디오. 소품은 검정 무선 헤드폰, 은색 체인 반지, 반짝이는 빨간 하트 막대사탕, 검정 스마트폰, 개어 둔 빨간 니트.\n글자, 라벨, 로고, 워터마크 없음."
+  },
+  {
     "id": "tea-2",
     "title": "정장 찻잔 (학 병풍)",
     "image": "images/tea_2.jpg",
