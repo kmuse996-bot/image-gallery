@@ -9,6 +9,29 @@ async function gh(tok,method,path,body){
   if(!r.ok){var e=new Error("HTTP "+r.status);e.status=r.status;try{e.detail=(await r.json()).message}catch(_){}throw e}
   return r.status===204?null:r.json();
 }
+var SK="ig_tok_s";
+function u8(b){var x=atob(b),u=new Uint8Array(x.length);for(var i=0;i<x.length;i++)u[i]=x.charCodeAt(i);return u}
+async function decryptVault(v,pw){
+  var C=(root.crypto&&root.crypto.subtle)?root.crypto:require("crypto").webcrypto;
+  var base=await C.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveKey"]);
+  var key=await C.subtle.deriveKey({name:"PBKDF2",hash:"SHA-256",salt:u8(v.salt),iterations:v.iter},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+  return new TextDecoder().decode(await C.subtle.decrypt({name:"AES-GCM",iv:u8(v.iv)},key,u8(v.ct)));
+}
+async function unlock(){
+  var t=sessionStorage.getItem(SK);if(t)return t;
+  var pw=await askPw();if(!pw)return null;
+  var v=await (await fetch("vault.json?_="+Date.now(),{cache:"no-store"})).json();
+  try{t=await decryptVault(v,pw)}catch(_){var e=new Error("bad password");e.badpw=true;throw e}
+  sessionStorage.setItem(SK,t);return t;
+}
+function lock(){sessionStorage.removeItem(SK)}
+function askPw(){return new Promise(function(res){
+  var o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999";
+  o.innerHTML='<form style="background:#222;color:#eee;padding:18px;border-radius:12px;display:flex;flex-direction:column;gap:10px;min-width:240px"><label>삭제 비밀번호</label><input type="password" autocomplete="current-password" style="padding:8px;font-size:16px"><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" data-x>취소</button><button type="submit">확인</button></div></form>';
+  document.body.appendChild(o);var f=o.querySelector("form"),i=o.querySelector("input");i.focus();
+  function done(v){o.remove();res(v)}
+  f.onsubmit=function(ev){ev.preventDefault();done(i.value)};o.querySelector("[data-x]").onclick=function(){done(null)};
+})}
 async function deleteEntry(tok,id){
   var f=await gh(tok,"GET","data.json");
   var data=JSON.parse(b64dec(f.content));
@@ -21,5 +44,5 @@ async function deleteEntry(tok,id){
   }
   return ent;
 }
-root.IGDel={deleteEntry:deleteEntry,gh:gh,b64enc:b64enc,b64dec:b64dec};
+root.IGDel={unlock:unlock,lock:lock,decryptVault:decryptVault,deleteEntry:deleteEntry,gh:gh,b64enc:b64enc,b64dec:b64dec};
 })(typeof window!=="undefined"?window:globalThis);
