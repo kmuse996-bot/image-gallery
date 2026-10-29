@@ -44,6 +44,12 @@ details[open] summary::before{transform:rotate(90deg)}
 .ptext{padding:0 12px 12px;font-size:13px;line-height:1.65;color:#cfd3df;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;max-height:70vh;overflow:auto}
 .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 10px}
 footer{color:var(--muted);font-size:11px;text-align:center;padding:10px 0 30px}
+.del{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--muted);font-size:12px;border-radius:8px;padding:3px 8px;cursor:pointer}
+.del:hover{border-color:#e5484d;color:#ff8a8d}
+.del:disabled{opacity:.5;cursor:wait}
+#tokclr{background:none;border:0;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;padding:0 0 0 8px}
+#toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:60;background:#22252f;border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:12px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .25s}
+#toast.on{opacity:1}
 #viewer{position:fixed;inset:0;z-index:50;background:rgba(5,6,8,.94);display:none;align-items:center;justify-content:center;cursor:zoom-out}
 #viewer.on{display:flex}
 #viewer img{max-width:100vw;max-height:100vh;object-fit:contain}
@@ -52,10 +58,26 @@ footer{color:var(--muted);font-size:11px;text-align:center;padding:10px 0 30px}
 <body>
 <header><div class="bar"><h1><span>이미지프롬</span> 갤러리</h1><div class="status" id="status"></div><input type="search" id="q" placeholder="제목·프롬 검색"></div></header>
 <main id="grid"></main>
-<footer>kmuse996 · image-gallery</footer>
+<footer>kmuse996 · image-gallery<button id="tokclr" type="button">토큰 지우기</button></footer>
+<div id="toast"></div>
 <div id="viewer"><img alt=""></div>
+<script src="del.js"></script>
 <script>
-var ALL=[];
+var ALL=[],TK="ig_gh_token";
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("on");clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove("on")},3500)}
+function getTok(){var t=localStorage.getItem(TK);if(t)return t;t=prompt("삭제하려면 GitHub 토큰이 필요해요.\n(kmuse996-bot/image-gallery 저장소 Contents 읽기/쓰기 권한)\n토큰을 붙여 넣어 주세요. 이 브라우저에만 저장돼요.");t=(t||"").trim();if(t)localStorage.setItem(TK,t);return t||null}
+async function doDelete(btn){
+  var id=btn.dataset.id;if(!confirm("이 이미지를 삭제할까요?"))return;
+  var tok=getTok();if(!tok){toast("토큰이 없어서 취소했어요.");return}
+  btn.disabled=true;
+  try{await IGDel.deleteEntry(tok,id);ALL=ALL.filter(function(e){return e.id!==id});render();toast("삭제했어요. 1~2분 뒤 반영돼요.")}
+  catch(e){btn.disabled=false;
+    if(e.status===401){localStorage.removeItem(TK);toast("토큰이 유효하지 않아요. 다시 시도하면 새로 입력할 수 있어요.")}
+    else if(e.status===403){toast("토큰 권한이 부족해요 (Contents 쓰기 필요).")}
+    else if(e.status===409||e.status===422){toast("동시에 변경이 있었어요. 잠시 뒤 다시 시도해 주세요.")}
+    else if(e.status===404){toast("이미 삭제됐거나 찾을 수 없어요.")}
+    else toast("삭제 실패: "+(e.detail||e.message))}
+}
 function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function copyText(txt,btn){
   function done(){btn.classList.add("ok");btn.textContent="복사됨 ✓";setTimeout(function(){btn.classList.remove("ok");btn.textContent="복사"},1500)}
@@ -69,9 +91,11 @@ function render(){
   document.getElementById("status").textContent=list.length+" / "+ALL.length+"장";
   var g=document.getElementById("grid");
   if(!list.length){g.innerHTML='<div class="empty">항목이 없어요</div>';return}
-  g.innerHTML=list.map(function(e){var i=ALL.indexOf(e);return '<article class="card"><div class="media" style="--ar:'+esc(e.ratio||"9/16")+'" data-src="'+esc(e.image)+'"><img loading="lazy" src="'+esc(e.image)+'" alt="'+esc(e.title)+'"><button class="xp" type="button" title="크게 보기">크게 ⛶</button></div><div class="body"><div class="title">'+esc(e.title)+'</div>'+'<div class="meta"><span>📅 '+esc(e.date||"-")+'</span><span>📐 '+esc((e.ratio||"9/16").replace("/",":"))+'</span></div>'+box("영어 프롬프트","EN",e.en,i+":en")+box("한글 프롬프트","KO",e.ko,i+":ko")+'</div></article>'}).join("");
+  g.innerHTML=list.map(function(e){var i=ALL.indexOf(e);return '<article class="card"><div class="media" style="--ar:'+esc(e.ratio||"9/16")+'" data-src="'+esc(e.image)+'"><img loading="lazy" src="'+esc(e.image)+'" alt="'+esc(e.title)+'"><button class="xp" type="button" title="크게 보기">크게 ⛶</button></div><div class="body"><div class="title">'+esc(e.title)+'</div>'+'<div class="meta"><span>📅 '+esc(e.date||"-")+'</span><span>📐 '+esc((e.ratio||"9/16").replace("/",":"))+'</span><button class="del" type="button" title="삭제" data-id="'+esc(e.id)+'">🗑 삭제</button></div>'+box("영어 프롬프트","EN",e.en,i+":en")+box("한글 프롬프트","KO",e.ko,i+":ko")+'</div></article>'}).join("");
 }
 document.addEventListener("click",function(ev){
+  var d=ev.target.closest(".del");if(d){ev.preventDefault();ev.stopPropagation();doDelete(d);return}
+  if(ev.target.id==="tokclr"){localStorage.removeItem(TK);toast("토큰을 지웠어요.");return}
   var b=ev.target.closest(".copy");if(b){ev.preventDefault();ev.stopPropagation();var p=b.dataset.k.split(":");copyText(ALL[+p[0]][p[1]],b);return}
   var m=ev.target.closest(".media");var v=document.getElementById("viewer");
   if(m){v.querySelector("img").src=m.dataset.src;v.classList.add("on");return}
