@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>이미지프롬 갤러리</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0d0e12">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="favicon.png">
+<style>
+:root{--bg:#0d0e12;--card:#16181f;--card2:#1d2029;--line:#2a2e3a;--text:#e9eaf0;--muted:#9097a8;--accent:#ff7a59;--accent2:#7c8cff}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR","Malgun Gothic",sans-serif;-webkit-font-smoothing:antialiased}
+header{position:sticky;top:0;z-index:5;background:rgba(13,14,18,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.bar{padding:14px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.3px}
+h1 span{background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.status{color:var(--muted);font-size:12px;margin-right:auto}
+input[type=search]{background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:8px 12px;font-size:14px;min-width:180px;outline:none}
+input[type=search]:focus{border-color:var(--accent2)}
+main{padding:18px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px}
+@media (max-width:420px){main{grid-template-columns:1fr;padding:12px;gap:14px}.bar{padding:12px}input[type=search]{min-width:0;flex:1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.media{position:relative;background:#000;aspect-ratio:var(--ar,9/16);max-height:720px;width:100%;cursor:zoom-in;overflow:hidden}
+.media img{width:100%;height:100%;object-fit:contain;display:block}
+.body{padding:14px 14px 16px;display:flex;flex-direction:column;gap:10px}
+.title{font-weight:700;font-size:15px}
+.meta{color:var(--muted);font-size:12px}
+.pbox{background:var(--card2);border:1px solid var(--line);border-radius:12px}
+.phead{padding:10px 12px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.lang{font-size:10px;padding:2px 6px;border-radius:6px;background:#2b3042;color:#c9cff0}
+.copy{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--text);font-size:12px;border-radius:8px;padding:5px 11px;cursor:pointer}
+.copy:hover{border-color:var(--accent2)}
+.copy.ok{border-color:#3bb273;color:#7ee2a8}
+.ptext{padding:0 12px 12px;font-size:13px;line-height:1.65;color:#cfd3df;white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;max-height:300px;overflow:auto}
+.empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:60px 10px}
+footer{color:var(--muted);font-size:11px;text-align:center;padding:10px 0 30px}
+#viewer{position:fixed;inset:0;z-index:50;background:rgba(5,6,8,.94);display:none;align-items:center;justify-content:center;cursor:zoom-out}
+#viewer.on{display:flex}
+#viewer img{max-width:100vw;max-height:100vh;object-fit:contain}
+</style>
+</head>
+<body>
+<header><div class="bar"><h1><span>이미지프롬</span> 갤러리</h1><div class="status" id="status"></div><input type="search" id="q" placeholder="제목·프롬 검색"></div></header>
+<main id="grid"></main>
+<footer>kmuse996 · image-gallery</footer>
+<div id="viewer"><img alt=""></div>
+<script>
+var ALL=[];
+function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function copyText(txt,btn){
+  function done(){btn.classList.add("ok");btn.textContent="복사됨 ✓";setTimeout(function(){btn.classList.remove("ok");btn.textContent="복사"},1500)}
+  function fallback(){var t=document.createElement("textarea");t.value=txt;t.setAttribute("readonly","");t.style.position="fixed";t.style.opacity="0";document.body.appendChild(t);t.select();t.setSelectionRange(0,t.value.length);try{document.execCommand("copy");done()}catch(e){alert("복사 실패: 길게 눌러 직접 복사하세요")}document.body.removeChild(t)}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(done,fallback)}else fallback();
+}
+function box(label,lang,text,key){return '<div class="pbox"><div class="phead"><span class="lang">'+lang+'</span>'+label+'<button class="copy" data-k="'+key+'">복사</button></div><div class="ptext">'+esc(text)+'</div></div>'}
+function render(){
+  var q=document.getElementById("q").value.trim().toLowerCase();
+  var list=ALL.filter(function(e){return !q||(e.title+" "+e.en+" "+e.ko).toLowerCase().indexOf(q)>=0});
+  document.getElementById("status").textContent=list.length+" / "+ALL.length+"장";
+  var g=document.getElementById("grid");
+  if(!list.length){g.innerHTML='<div class="empty">항목이 없어요</div>';return}
+  g.innerHTML=list.map(function(e){var i=ALL.indexOf(e);return '<article class="card"><div class="media" style="--ar:'+esc(e.ratio||"9/16")+'" data-src="'+esc(e.image)+'"><img loading="lazy" src="'+esc(e.image)+'" alt="'+esc(e.title)+'"></div><div class="body"><div class="title">'+esc(e.title)+'</div>'+(e.date?'<div class="meta">'+esc(e.date)+'</div>':'')+box("English prompt","EN",e.en,i+":en")+box("한글 프롬프트","KO",e.ko,i+":ko")+'</div></article>'}).join("");
+}
+document.addEventListener("click",function(ev){
+  var b=ev.target.closest(".copy");if(b){var p=b.dataset.k.split(":");copyText(ALL[+p[0]][p[1]],b);return}
+  var m=ev.target.closest(".media");var v=document.getElementById("viewer");
+  if(m){v.querySelector("img").src=m.dataset.src;v.classList.add("on");return}
+  if(ev.target.closest("#viewer"))v.classList.remove("on");
+});
+document.getElementById("q").addEventListener("input",render);
+fetch("data.json?_="+Date.now(),{cache:"no-store"}).then(function(r){return r.json()}).then(function(d){ALL=d.slice().reverse();render()}).catch(function(){document.getElementById("grid").innerHTML='<div class="empty">data.json을 불러오지 못했어요</div>'});
+</script>
+</body>
+</html>
